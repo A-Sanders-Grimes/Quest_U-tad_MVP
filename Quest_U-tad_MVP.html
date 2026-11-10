@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuestU-tad - Campus Quest Board</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #0f172a;
+      color: #f8fafc;
+      background-image: radial-gradient(#334155 1.5px, transparent 1.5px);
+      background-size: 24px 24px;
+    }
+    
+    .quest-card {
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .quest-card:hover {
+      transform: translateY(-5px) rotate(0.8deg);
+    }
+
+    .pinned-card {
+      border: 2px solid #a855f7;
+      box-shadow: 0 0 22px rgba(168, 85, 247, 0.3);
+    }
+
+    /* Custom horizontal scrollbar for filter bar */
+    .filter-scroll::-webkit-scrollbar {
+      height: 6px;
+    }
+    .filter-scroll::-webkit-scrollbar-track {
+      background: #0f172a;
+      border-radius: 9999px;
+    }
+    .filter-scroll::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 9999px;
+    }
+    .filter-scroll::-webkit-scrollbar-thumb:hover {
+      background: #a855f7;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- TOP HEADER / NAVBAR -->
+  <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      
+      <!-- Logo & Slogan (Clickable to return to Quest Board) -->
+      <div class="flex items-center gap-3 cursor-pointer group" onclick="switchPage('board')">
+        <!-- CUSTOM LOGO SVG REPLICATING USER IMAGE (Magnifying Glass 'Q' + QUEST typography) -->
+        <div class="flex items-center gap-1.5 py-1">
+          <svg class="h-9 w-auto text-white drop-shadow-[0_0_12px_rgba(168,85,247,0.5)] group-hover:scale-105 transition-transform" viewBox="0 0 340 75" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Magnifying Glass 'Q' -->
+            <circle cx="30" cy="34" r="23" stroke="currentColor" stroke-width="8"/>
+            <path d="M22 23 C 28 17, 36 17, 40 21" stroke="currentColor" stroke-width="4.5" stroke-linecap="round"/>
+            <rect x="42" y="44" width="8" height="22" rx="3.5" transform="rotate(-45 42 44)" fill="currentColor"/>
+            
+            <!-- 'u' -->
+            <path d="M78 22 V 46 C 78 54, 84 59, 94 59 C 104 59, 110 54, 110 46 V 22" stroke="currentColor" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round"/>
+            
+            <!-- 'e' -->
+            <path d="M165 38 H 128 C 128 26, 137 20, 147 20 C 158 20, 166 27, 166 38 C 166 52, 157 59, 146 59 C 135 59, 128 52, 128 44" stroke="currentColor" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round"/>
+            
+            <!-- 's' -->
+            <path d="M208 27 C 205 21, 196 20, 190 23 C 183 26, 185 34, 195 36 C 208 38, 209 48, 201 55 C 193 61, 184 57, 181 52" stroke="currentColor" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round"/>
+            
+            <!-- 't' -->
+            <path d="M224 21 H 262 M 243 21 V 59" stroke="currentColor" stroke-width="7.5" stroke-linecap="round"/>
+          </svg>
+          <span class="text-2xl font-black text-purple-400 tracking-tight ml-0.5">U-tad</span>
+          <span class="bg-purple-500/20 text-purple-300 text-[10px] font-extrabold px-2 py-0.5 rounded-full border border-purple-500/30 uppercase tracking-wider ml-1">MVP</span>
+        </div>
+      </div>
+
+      <!-- Header Buttons -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <!-- Back to Board Button (visible when on About page or anywhere) -->
+        <button onclick="switchPage('board')" id="nav-board-btn" class="bg-slate-800 hover:bg-slate-700 text-purple-300 border border-purple-500/30 px-4 sm:px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-md transition-all active:scale-95 text-xs sm:text-sm">
+          <i class="fa-solid fa-clipboard-list text-purple-400"></i>
+          <span>Quest Board</span>
+        </button>
+
+        <!-- About Us Button -->
+        <button onclick="switchPage('about')" id="nav-about-btn" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 hover:border-slate-600 px-4 sm:px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-md transition-all active:scale-95 text-xs sm:text-sm">
+          <i class="fa-solid fa-circle-info text-purple-400"></i>
+          <span>About Us</span>
+        </button>
+
+        <!-- Pin a Quest Button -->
+        <button onclick="openModal()" class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold px-4 sm:px-5 py-2.5 rounded-xl shadow-lg shadow-purple-500/25 flex items-center gap-2 transition-all active:scale-95 text-xs sm:text-sm">
+          <i class="fa-solid fa-thumbtack text-purple-200"></i>
+          <span>Pin a Quest</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- MAIN PAGE CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- ==================== PAGE 1: QUEST BOARD ==================== -->
+    <div id="page-board" class="space-y-6">
+
+      <!-- Hero Header -->
+      <div class="text-center py-4 space-y-2">
+        <h1 class="text-3xl sm:text-5xl font-black text-white tracking-tight flex items-center justify-center gap-3">
+          <i class="fa-solid fa-thumbtack text-purple-500 transform -rotate-12"></i>
+          QUEST PINBOARD
+        </h1>
+        <p class="text-slate-400 text-base sm:text-lg font-medium max-w-xl mx-auto">
+          Your campus. Your quests. Your community
+        </p>
+      </div>
+
+      <!-- SINGLE LINE FILTER BAR & SEARCH WITH SLIDE BAR -->
+      <div class="bg-slate-900/80 border border-slate-800 p-3 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-3 shadow-xl">
+        
+        <!-- Category Buttons with custom Horizontal Slide Bar -->
+        <div class="filter-scroll flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 whitespace-nowrap">
+          <button onclick="filterCategory('All')" class="cat-btn active-cat bg-purple-600 text-white font-bold px-4 py-2 rounded-xl text-xs sm:text-sm transition-all shrink-0">
+            🔥 All Quests
+          </button>
+          <button onclick="filterCategory('Academic')" class="cat-btn bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold px-4 py-2 rounded-xl text-xs sm:text-sm transition-all shrink-0 flex items-center gap-1.5">
+            <i class="fa-solid fa-graduation-cap text-indigo-400"></i> Academic & Tutoring
+          </button>
+          <button onclick="filterCategory('Projects')" class="cat-btn bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold px-4 py-2 rounded-xl text-xs sm:text-sm transition-all shrink-0 flex items-center gap-1.5">
+            <i class="fa-solid fa-gamepad text-purple-400"></i> Game Jams & Projects
+          </button>
+          <button onclick="filterCategory('Social')" class="cat-btn bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold px-4 py-2 rounded-xl text-xs sm:text-sm transition-all shrink-0 flex items-center gap-1.5">
+            <i class="fa-solid fa-pizza-slice text-amber-400"></i> Social & Hangouts
+          </button>
+        </div>
+
+        <!-- Search Input -->
+        <div class="relative w-full md:w-64 shrink-0">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+          <input type="text" id="searchInput" oninput="renderQuests()" placeholder="Search campus board..." class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs sm:text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-purple-500 transition-colors">
+        </div>
+
+      </div>
+
+      <!-- QUEST GRID FEED -->
+      <div id="questGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-4">
+        <!-- Rendered via JS -->
+      </div>
+
+    </div>
+
+    <!-- ==================== PAGE 2: ABOUT US ==================== -->
+    <div id="page-about" class="hidden space-y-10 py-4">
+
+      <!-- Header Section -->
+      <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 sm:p-12 text-center space-y-4 shadow-2xl relative overflow-hidden">
+        <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-purple-600/10 rounded-full blur-3xl pointer-events-none"></div>
+        
+        <span class="bg-purple-500/10 text-purple-400 border border-purple-500/20 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider">
+          Sprint 2 Submission Hub
+        </span>
+        
+        <h1 class="text-4xl sm:text-5xl font-black text-white">About <span class="text-purple-400">QuestU-tad</span></h1>
+        
+        <p class="text-xl font-semibold text-slate-300 max-w-2xl mx-auto italic">
+          "Your campus. Your quests. Your community"
+        </p>
+        
+        <p class="text-slate-400 text-sm sm:text-base max-w-3xl mx-auto leading-relaxed">
+          QuestU-tad is a dedicated gamified platform built specifically for U-tad students to eliminate communication chaos on WhatsApp and Discord, connecting software engineers, digital designers, animators, and game developers in one central hub.
+        </p>
+      </div>
+
+      <!-- TEAM MEMBERS SECTION -->
+      <div class="space-y-6">
+        <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+          <i class="fa-solid fa-users text-purple-400"></i> Project Team & Roles
+        </h2>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          
+          <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-2 hover:border-slate-700 transition-colors text-center">
+            <div class="w-12 h-12 bg-purple-500/10 text-purple-400 rounded-full flex items-center justify-center mx-auto text-xl font-bold">AF</div>
+            <h3 class="font-bold text-white text-base">Alberto Fernández</h3>
+            <p class="text-xs text-purple-400 font-semibold uppercase">Product Owner</p>
+            <p class="text-xs text-slate-400">Full-Stack / Vision</p>
+          </div>
+
+          <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-2 hover:border-slate-700 transition-colors text-center">
+            <div class="w-12 h-12 bg-indigo-500/10 text-indigo-400 rounded-full flex items-center justify-center mx-auto text-xl font-bold">AG</div>
+            <h3 class="font-bold text-white text-base">Adrian Grimes</h3>
+            <p class="text-xs text-indigo-400 font-semibold uppercase">Scrum Master</p>
+            <p class="text-xs text-slate-400">Full-Stack / Ops</p>
+          </div>
+
+          <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-2 hover:border-slate-700 transition-colors text-center">
+            <div class="w-12 h-12 bg-cyan-500/10 text-cyan-400 rounded-full flex items-center justify-center mx-auto text-xl font-bold">NG</div>
+            <h3 class="font-bold text-white text-base">Noémie Guillaume</h3>
+            <p class="text-xs text-cyan-400 font-semibold uppercase">Frontend Dev</p>
+            <p class="text-xs text-slate-400">UI Integration</p>
+          </div>
+
+          <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-2 hover:border-slate-700 transition-colors text-center">
+            <div class="w-12 h-12 bg-amber-500/10 text-amber-400 rounded-full flex items-center justify-center mx-auto text-xl font-bold">JM</div>
+            <h3 class="font-bold text-white text-base">Jaime Martinez</h3>
+            <p class="text-xs text-amber-400 font-semibold uppercase">Digital Designer</p>
+            <p class="text-xs text-slate-400">UX / UI Architecture</p>
+          </div>
+
+          <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-2 hover:border-slate-700 transition-colors text-center">
+            <div class="w-12 h-12 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto text-xl font-bold">DR</div>
+            <h3 class="font-bold text-white text-base">Dani Reguilon</h3>
+            <p class="text-xs text-emerald-400 font-semibold uppercase">QA & Tester</p>
+            <p class="text-xs text-slate-400">Quality & Testing</p>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- CONCEPT VIDEO & PRESENTATION SLIDE DECK -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
+        <!-- Video Container -->
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-xl flex flex-col justify-between">
+          <div class="flex items-center justify-between">
+            <h2 class="text-xl font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-video text-purple-400"></i> Concept Video (1-Min)
+            </h2>
+            <div class="flex items-center gap-2">
+              <a href="https://www.youtube.com/watch?v=XGOg4RA4Bac" target="_blank" rel="noopener noreferrer" class="bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 text-xs font-bold px-3 py-1.5 rounded-lg border border-purple-500/30 flex items-center gap-1.5 transition-colors">
+                <i class="fa-brands fa-youtube text-red-500"></i> Watch on YouTube
+              </a>
+              <button onclick="toggleFullScreen('video-container')" title="Full Screen Video" class="bg-slate-800 hover:bg-slate-700 text-purple-300 text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1.5 transition-colors">
+                <i class="fa-solid fa-expand"></i> Full Screen
+              </button>
+            </div>
+          </div>
+          
+          <div id="video-container" class="aspect-video bg-slate-950 rounded-2xl border border-slate-800 relative overflow-hidden flex flex-col items-center justify-center">
+            
+            <!-- Standard Video Player Embed Frame -->
+            <iframe id="conceptIframe" class="w-full h-full rounded-2xl border-0 hidden" 
+                    src="" 
+                    title="QuestU-tad Concept Video"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                    allowfullscreen>
+            </iframe>
+
+            <!-- Click to Load / Play Overlay Poster (Bypasses YouTube Error 153 in local sandboxes) -->
+            <div id="video-poster-overlay" class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/90 to-slate-950 flex flex-col items-center justify-center p-6 text-center space-y-4">
+              <div class="w-16 h-16 bg-purple-600/20 text-purple-400 rounded-full flex items-center justify-center text-2xl shadow-xl border border-purple-500/30">
+                <i class="fa-solid fa-play ml-1"></i>
+              </div>
+              <div class="space-y-1">
+                <p class="text-white font-bold text-lg">Sprint 2 Concept Video</p>
+                <p class="text-xs text-slate-400 max-w-xs">See how QuestU-tad connects students across campus in 1 minute.</p>
+              </div>
+              <div class="flex items-center gap-3 pt-2">
+                <button onclick="startConceptVideo()" class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-extrabold px-5 py-2.5 rounded-xl shadow-lg shadow-purple-500/25 flex items-center gap-2 transition-all active:scale-95">
+                  <i class="fa-solid fa-circle-play"></i> Play Video
+                </button>
+                <a href="https://www.youtube.com/watch?v=XGOg4RA4Bac" target="_blank" rel="noopener noreferrer" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold px-4 py-2.5 rounded-xl border border-slate-700 transition-colors flex items-center gap-1.5">
+                  <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i> Open Link
+                </a>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Slide Deck Container -->
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-xl flex flex-col justify-between">
+          <div class="flex items-center justify-between">
+            <h2 class="text-xl font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-file-powerpoint text-indigo-400"></i> Presentation & Document
+            </h2>
+            <div class="flex items-center gap-2">
+              <button onclick="toggleFullScreen('pdf-container')" title="Full Screen Presentation" class="bg-slate-800 hover:bg-slate-700 text-indigo-300 text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1.5 transition-colors">
+                <i class="fa-solid fa-expand"></i> Full Screen
+              </button>
+              <span class="text-xs text-slate-400 bg-slate-800 px-3 py-1 rounded-full">Slide Deck</span>
+            </div>
+          </div>
+
+          <div id="pdf-container" class="aspect-video bg-slate-950 rounded-2xl border border-slate-800 relative overflow-hidden flex flex-col items-center justify-center">
+            <!-- Embedded PDF for local repository or Gamma iframe -->
+            <iframe class="w-full h-full rounded-2xl border-0" 
+                    src="https://gamma.app/embed/buzrhthxwwc5n4z" 
+                    allow="fullscreen" 
+                    allowfullscreen>
+            </iframe>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- ==================== MODAL: POST / EDIT QUEST ==================== -->
+  <div id="questModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 w-full max-w-lg rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl relative">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+        <h3 id="modalTitle" class="text-xl font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-thumbtack text-purple-400"></i> Pin a New Quest
+        </h3>
+        <button onclick="closeModal()" class="text-slate-400 hover:text-white p-2">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Form Inputs -->
+      <form id="questForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
+        <input type="hidden" id="editQuestId" value="">
+
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Author Name</label>
+          <input type="text" id="questAuthor" required placeholder="e.g. Álex M." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Quest Title</label>
+          <input type="text" id="questTitle" required placeholder="e.g. Need help debugging C++ Pointer error" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Category</label>
+          <select id="questCategory" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500">
+            <option value="Academic">Academic & Tutoring</option>
+            <option value="Projects">Game Jams & Projects</option>
+            <option value="Social">Social & Hangouts</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Description</label>
+          <textarea id="questDesc" required rows="3" placeholder="Describe what you need help with or details about your meetup..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500"></textarea>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Tags (Comma Separated)</label>
+          <input type="text" id="questTags" placeholder="e.g. CPP, Software, Unity" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500">
+        </div>
+
+        <div class="pt-2 flex justify-end gap-3">
+          <button type="button" onclick="closeModal()" class="px-5 py-2.5 rounded-xl border border-slate-700 text-slate-300 text-sm font-semibold hover:bg-slate-800">
+            Cancel
+          </button>
+          <button type="submit" id="modalSubmitBtn" class="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-sm font-bold shadow-lg shadow-purple-500/25">
+            Pin Quest
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: DELETE CONFIRMATION ==================== -->
+  <div id="deleteModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-3xl p-6 text-center space-y-6 shadow-2xl">
+      
+      <div class="w-16 h-16 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto text-2xl">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+
+      <div class="space-y-2">
+        <h3 class="text-xl font-bold text-white">Delete Quest?</h3>
+        <p class="text-slate-400 text-sm">
+          Are you sure you want to delete this quest? This action will permanently remove it from the board for everyone.
+        </p>
+      </div>
+
+      <div class="flex items-center justify-center gap-3">
+        <button onclick="closeDeleteModal()" class="px-5 py-2.5 rounded-xl border border-slate-700 text-slate-300 text-sm font-semibold hover:bg-slate-800">
+          Cancel
+        </button>
+        <button onclick="confirmDeleteQuest()" class="px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-sm font-bold shadow-lg shadow-red-500/25">
+          Yes, Delete
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    // INITIAL SAMPLE QUEST DATA
+    let quests = [
+      {
+        id: 1,
+        author: "Álex M.",
+        title: "C++ Memory Leak in Unreal Engine Project",
+        category: "Academic",
+        desc: "Need an extra pair of eyes to check a pointer allocation error before tomorrow's submission!",
+        tags: ["CPP", "Software", "Unreal"],
+        upvotes: 12,
+        pinned: true
+      },
+      {
+        id: 2,
+        author: "Elena R.",
+        title: "Looking for 2D Concept Artist for 48h Game Jam",
+        category: "Projects",
+        desc: "We have 2 programmers and a sound designer! Need an artist to design characters.",
+        tags: ["GameJam", "Design", "Art"],
+        upvotes: 8,
+        pinned: false
+      },
+      {
+        id: 3,
+        author: "Carlos T.",
+        title: "Super Smash Bros Ultimate Friendly Tournament",
+        category: "Social",
+        desc: "Meeting at the cafeteria at 14:30. Bring your Pro Controller if you have one!",
+        tags: ["Gaming", "CampusLife", "Smash"],
+        upvotes: 19,
+        pinned: false
+      }
+    ];
+
+    let currentCategory = 'All';
+    let questToDeleteId = null;
+
+    // PAGE NAVIGATION
+    function switchPage(page) {
+      const boardPage = document.getElementById('page-board');
+      const aboutPage = document.getElementById('page-about');
+      
+      if (page === 'about') {
+        boardPage.classList.add('hidden');
+        aboutPage.classList.remove('hidden');
+      } else {
+        aboutPage.classList.add('hidden');
+        boardPage.classList.remove('hidden');
+      }
+    }
+
+    // FILTER CATEGORY
+    function filterCategory(cat) {
+      currentCategory = cat;
+      document.querySelectorAll('.cat-btn').forEach(btn => {
+        btn.classList.remove('bg-purple-600', 'text-white', 'active-cat');
+        btn.classList.add('bg-slate-800', 'text-slate-300');
+      });
+      event.currentTarget.classList.remove('bg-slate-800', 'text-slate-300');
+      event.currentTarget.classList.add('bg-purple-600', 'text-white', 'active-cat');
+      renderQuests();
+    }
+
+    // RENDER QUEST CARDS
+    function renderQuests() {
+      const grid = document.getElementById('questGrid');
+      const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+      
+      grid.innerHTML = '';
+
+      // Sort: Pinned first, then by ID descending
+      let filtered = quests.filter(q => {
+        const matchesCategory = currentCategory === 'All' || q.category === currentCategory;
+        const matchesSearch = q.title.toLowerCase().includes(searchQuery) || 
+                              q.desc.toLowerCase().includes(searchQuery) ||
+                              q.tags.some(t => t.toLowerCase().includes(searchQuery));
+        return matchesCategory && matchesSearch;
+      }).sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full text-center py-12 text-slate-500 space-y-2">
+            <i class="fa-solid fa-ghost text-4xl mb-2"></i>
+            <p class="font-bold text-slate-400">No quests found on the board.</p>
+            <p class="text-xs">Be the first to pin one!</p>
+          </div>
+        `;
+        return;
+      }
+
+      filtered.forEach(q => {
+        const card = document.createElement('div');
+        card.className = `quest-card bg-slate-900 border rounded-2xl p-6 space-y-4 flex flex-col justify-between relative ${q.pinned ? 'pinned-card border-purple-500' : 'border-slate-800'}`;
+        
+        card.innerHTML = `
+          <div class="space-y-3">
+            <div class="flex items-start justify-between gap-2">
+              <span class="text-xs font-bold px-3 py-1 rounded-full ${getCategoryBadgeClass(q.category)}">
+                ${q.category}
+              </span>
+              
+              <div class="flex items-center gap-2">
+                <button onclick="togglePin(${q.id})" title="${q.pinned ? 'Unpin' : 'Pin to top'}" class="text-slate-400 hover:text-purple-400 text-sm p-1">
+                  <i class="fa-solid fa-thumbtack ${q.pinned ? 'text-purple-400' : ''}"></i>
+                </button>
+                <button onclick="openEditModal(${q.id})" title="Edit Quest" class="text-slate-400 hover:text-blue-400 text-sm p-1">
+                  <i class="fa-solid fa-pen-to-square"></i>
+                </button>
+                <button onclick="openDeleteModal(${q.id})" title="Delete Quest" class="text-slate-400 hover:text-red-400 text-sm p-1">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <h3 class="font-bold text-white text-lg leading-snug">${q.title}</h3>
+              <p class="text-xs text-slate-400 mt-1">Posted by <span class="text-slate-200 font-semibold">${q.author}</span></p>
+            </div>
+
+            <p class="text-slate-300 text-sm leading-relaxed">${q.desc}</p>
+
+            <div class="flex flex-wrap gap-1.5 pt-1">
+              ${q.tags.map(t => `<span class="bg-slate-950 text-slate-400 text-[11px] font-medium px-2.5 py-0.5 rounded-md border border-slate-800">#${t}</span>`).join('')}
+            </div>
+          </div>
+
+          <div class="border-t border-slate-800/80 pt-4 flex items-center justify-between mt-4">
+            <button onclick="upvoteQuest(${q.id})" class="flex items-center gap-2 text-xs font-bold text-slate-300 hover:text-purple-400 bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-lg transition-colors">
+              <i class="fa-solid fa-heart text-purple-500"></i> ${q.upvotes}
+            </button>
+
+            <button onclick="alert('Connected with ${q.author}!')" class="bg-purple-600/10 hover:bg-purple-600/20 text-purple-400 border border-purple-500/30 text-xs font-bold px-3 py-1.5 rounded-lg transition-colors">
+              Offer Help
+            </button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function getCategoryBadgeClass(category) {
+      switch(category) {
+        case 'Academic': return 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20';
+        case 'Projects': return 'bg-purple-500/10 text-purple-400 border border-purple-500/20';
+        case 'Social': return 'bg-amber-500/10 text-amber-400 border border-amber-500/20';
+        default: return 'bg-slate-800 text-slate-300';
+      }
+    }
+
+    // ACTIONS
+    function togglePin(id) {
+      const q = quests.find(q => q.id === id);
+      if (q) {
+        q.pinned = !q.pinned;
+        renderQuests();
+      }
+    }
+
+    function upvoteQuest(id) {
+      const q = quests.find(q => q.id === id);
+      if (q) {
+        q.upvotes++;
+        renderQuests();
+      }
+    }
+
+    // MODAL HANDLERS
+    function openModal() {
+      document.getElementById('editQuestId').value = '';
+      document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-thumbtack text-purple-400"></i> Pin a New Quest';
+      document.getElementById('modalSubmitBtn').innerText = 'Pin Quest';
+      document.getElementById('questForm').reset();
+      document.getElementById('questModal').classList.remove('hidden');
+    }
+
+    function openEditModal(id) {
+      const q = quests.find(q => q.id === id);
+      if (!q) return;
+
+      document.getElementById('editQuestId').value = q.id;
+      document.getElementById('questAuthor').value = q.author;
+      document.getElementById('questTitle').value = q.title;
+      document.getElementById('questCategory').value = q.category;
+      document.getElementById('questDesc').value = q.desc;
+      document.getElementById('questTags').value = q.tags.join(', ');
+
+      document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-pen-to-square text-purple-400"></i> Edit Quest';
+      document.getElementById('modalSubmitBtn').innerText = 'Save Changes';
+      document.getElementById('questModal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('questModal').classList.add('hidden');
+    }
+
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      const editId = document.getElementById('editQuestId').value;
+      const author = document.getElementById('questAuthor').value;
+      const title = document.getElementById('questTitle').value;
+      const category = document.getElementById('questCategory').value;
+      const desc = document.getElementById('questDesc').value;
+      const tags = document.getElementById('questTags').value.split(',').map(t => t.trim()).filter(t => t);
+
+      if (editId) {
+        // Edit existing
+        const q = quests.find(q => q.id === parseInt(editId));
+        if (q) {
+          q.author = author;
+          q.title = title;
+          q.category = category;
+          q.desc = desc;
+          q.tags = tags;
+        }
+      } else {
+        // Add new
+        quests.unshift({
+          id: Date.now(),
+          author,
+          title,
+          category,
+          desc,
+          tags,
+          upvotes: 0,
+          pinned: false
+        });
+      }
+
+      closeModal();
+      renderQuests();
+    }
+
+    // DELETE MODAL HANDLERS
+    function openDeleteModal(id) {
+      questToDeleteId = id;
+      document.getElementById('deleteModal').classList.remove('hidden');
+    }
+
+    function closeDeleteModal() {
+      questToDeleteId = null;
+      document.getElementById('deleteModal').classList.add('hidden');
+    }
+
+    function confirmDeleteQuest() {
+      if (questToDeleteId !== null) {
+        quests = quests.filter(q => q.id !== questToDeleteId);
+        closeDeleteModal();
+        renderQuests();
+      }
+    }
+
+    // FULL SCREEN TOGGLE FUNCTION
+    function toggleFullScreen(elementId) {
+      const elem = document.getElementById(elementId);
+      if (!elem) return;
+
+      if (!document.fullscreenElement) {
+        if (elem.requestFullscreen) {
+          elem.requestFullscreen();
+        } else if (elem.webkitRequestFullscreen) { /* Safari */
+          elem.webkitRequestFullscreen();
+        } else if (elem.msRequestFullscreen) { /* IE11 */
+          elem.msRequestFullscreen();
+        }
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    }
+
+    // START CONCEPT VIDEO (Dynamically sets src to bypass browser origin restriction Error 153)
+    function startConceptVideo() {
+      const iframe = document.getElementById('conceptIframe');
+      const poster = document.getElementById('video-poster-overlay');
+      iframe.src = "https://www.youtube.com/embed/XGOg4RA4Bac?autoplay=1&rel=0";
+      poster.classList.add('hidden');
+      iframe.classList.remove('hidden');
+    }
+
+    // INIT
+    window.onload = function() {
+      renderQuests();
+    };
+  </script>
+</body>
+</html>
